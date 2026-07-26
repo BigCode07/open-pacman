@@ -1,6 +1,6 @@
 # Spec 04 — Liberación secuencial de fantasmas desde la jaula
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Dependencias:** Spec 01 (`fantasmas-personalidad.md`), Spec 03 (`corregir-velocidades-alineacion.md`)
 > **Fecha:** 2026-07-26
 > **Objetivo:** Implementar el comportamiento arcade de inicio de fantasmas: Blinky fuera de la jaula y Pinky, Inky y Clyde dentro, liberándose secuencialmente por timer y dots comidos.
