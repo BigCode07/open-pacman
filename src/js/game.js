@@ -11,7 +11,17 @@ const DIRS = {
 const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
-const GHOST_SPEED = 0.1;    // 1/10 celda/frame
+
+// Velocidades de fantasmas. Base: Pinky, Inky, Clyde siempre.
+// Blinky muta su speed en runtime segun dots restantes (Cruise Elroy).
+const GHOST_SPEED_BASE   = 0.1;
+const GHOST_SPEED_ELORY1 = 0.105; // Blinky cuando dots restantes < ELORY1_THRESHOLD
+const GHOST_SPEED_ELORY2 = 0.11;  // Blinky cuando dots restantes < ELORY2_THRESHOLD
+const ELORY1_THRESHOLD   = 30;
+const ELORY2_THRESHOLD   = 10;
+const CLYDE_RADIUS       = 8;     // distancia Manhattan
+const PINKY_LOOKAHEAD    = 4;
+const INKY_LOOKAHEAD     = 2;
 
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
@@ -40,8 +50,8 @@ function createGame() {
       x: g.x,
       y: g.y,
       dir: 'up',
-      speed: GHOST_SPEED,
-      kind: g.kind,
+      speed: GHOST_SPEED_BASE,
+      name: g.name,
     } ) ),
   };
 }
@@ -110,9 +120,59 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
+// Cruise Elroy: muta la speed de Blinky segun dots restantes.
+function applyElroy( g, dotsRemaining ) {
+  if ( dotsRemaining < ELORY2_THRESHOLD ) g.speed = GHOST_SPEED_ELORY2;
+  else if ( dotsRemaining < ELORY1_THRESHOLD ) g.speed = GHOST_SPEED_ELORY1;
+  else g.speed = GHOST_SPEED_BASE;
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
   const p = game.pacman;
+  const idx = game.ghosts.indexOf( g );
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+  const pd = DIRS[ p.dir ] || DIRS.left;
+
+  // Target segun personalidad.
+  let tx, ty;
+  switch ( g.name ) {
+    case 'blanca': // Blinky: celda de Pac-Man + Cruise Elroy.
+      applyElroy( g, game.dotsRemaining );
+      tx = px;
+      ty = py;
+      break;
+    case 'pinky': // 4 celdas adelante de Pac-Man en su direccion.
+      tx = px + PINKY_LOOKAHEAD * pd.x;
+      ty = py + PINKY_LOOKAHEAD * pd.y;
+      break;
+    case 'inky': { // reflejo de Blinky respecto al pivot Pac-Man + 2 celdas.
+      const pivotX = px + INKY_LOOKAHEAD * pd.x;
+      const pivotY = py + INKY_LOOKAHEAD * pd.y;
+      const blinky = game.ghosts[ 0 ]; // indice 0 = Blinky (contractual)
+      const bx = Math.round( blinky.x );
+      const by = Math.round( blinky.y );
+      tx = pivotX + ( pivotX - bx );
+      ty = pivotY + ( pivotY - by );
+      break;
+    }
+    case 'clyde': { // persigue si Manhattan > 8, si no regresa a su esquina.
+      const dist = Math.abs( g.x - px ) + Math.abs( g.y - py );
+      const scatter = GHOST_STARTS[ idx ].scatter;
+      if ( dist > CLYDE_RADIUS ) {
+        tx = px;
+        ty = py;
+      } else {
+        tx = scatter.x;
+        ty = scatter.y;
+      }
+      break;
+    }
+    default:
+      tx = px;
+      ty = py;
+  }
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
@@ -120,25 +180,21 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'hunter' ) {
-    const px = Math.round( p.x );
-    const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
+  // Elegir la direccion que produzca la menor distancia Manhattan del
+  // siguiente paso al target (sin invertir sentido; callejon permite 180).
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
     }
-    g.dir = best;
-  } else {
-    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
+  g.dir = best;
 }
 
 function moveGhost( game, g ) {
@@ -168,6 +224,7 @@ function resetPositions( game ) {
     g.x = GHOST_STARTS[ i ].x;
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
+    g.speed = GHOST_SPEED_BASE; // Blinky puede haber acelerado (Cruise Elroy)
   } );
 }
 
