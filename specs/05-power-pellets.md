@@ -10,7 +10,7 @@
 ### Dentro del alcance
 
 - Agregar un nuevo tile `4` (power pellet) en `src/js/maze.js`, con caracter `'o'` en `MAZE_STR`.
-- Colocar los 4 power pellets en las celdas canónicas: `(1,3)`, `(26,3)`, `(1,23)`, `(26,23)`.
+- Colocar los 4 power pellets en las esquinas reales del laberinto: `(1,1)`, `(26,1)`, `(1,29)`, `(26,29)` (celdas transitables más externas, en el borde playable).
 - Comer un power pellet suma `50` puntos y activa el modo asustado (`frightened`) en todos los fantasmas en estado `chase` o `leaving_pen`.
 - Reverso inmediato de dirección de todos los fantasmas al activar el modo asustado.
 - Navegación random en cada intersección durante `frightened` (sin invertir sentido, salvo callejón).
@@ -48,7 +48,7 @@ function parseTile( ch ) {
 }
 ```
 
-Las 4 celdas `(1,3)`, `(26,3)`, `(1,23)`, `(26,23)` cambian de `'.'` a `'o'` en `MAZE_STR` (filas 3 y 23).
+Las 4 celdas `(1,1)`, `(26,1)`, `(1,29)`, `(26,29)` cambian de `'.'` a `'o'` en `MAZE_STR` (filas 1 y 29, las más externas transitables).
 
 ### Fantasma ampliado en `src/js/game.js`
 
@@ -107,7 +107,7 @@ Cada paso deja el sistema funcional y ejecutable.
 
 1. **Agregar el tile `4` en `src/js/maze.js`.**
    - Ampliar `parseTile` para mapear `'o'` a `4`.
-   - Reemplazar `'.'` por `'o'` en las 4 celdas `(1,3)`, `(26,3)`, `(1,23)`, `(26,23)` de `MAZE_STR` (filas 3 y 23).
+   - Reemplazar `'.'` por `'o'` en las 4 celdas `(1,1)`, `(26,1)`, `(1,29)`, `(26,29)` de `MAZE_STR` (filas 1 y 29, las más externas).
    - Verificación manual: cargar `src/index.html`; los 4 puntos grandes aparecen en las esquinas; el juego sigue corriendo.
 
 2. **Contar power pellets en `dotsRemaining` y sumar al comerlos.**
@@ -193,7 +193,7 @@ Cada paso deja el sistema funcional y ejecutable.
 ## Criterios de aceptación
 
 - [ ] `src/js/maze.js` mapea `'o'` a `4` en `parseTile`.
-- [ ] Las celdas `(1,3)`, `(26,3)`, `(1,23)`, `(26,23)` de `MAZE_STR` contienen `'o'`.
+- [ ] Las celdas `(1,1)`, `(26,1)`, `(1,29)`, `(26,29)` de `MAZE_STR` contienen `'o'` (esquinas reales del laberinto).
 - [ ] `createGame` cuenta los tiles `4` en `dotsRemaining`.
 - [ ] `movePacman` come el tile `4`, lo setea a `0`, suma `50` puntos y decrementa `dotsRemaining`.
 - [ ] `game.frightened = { timer, combo }` existe en `createGame`.
@@ -222,7 +222,7 @@ Cada paso deja el sistema funcional y ejecutable.
 ### Tomadas
 
 - **Nuevo tile `4` con caracter `'o'`** en `maze.js`. Permite que `createGame` herede los 4 power pellets en `dotsRemaining` sin lógica extra, manteniendo `MAZE_STR` legible.
-- **Posiciones canónicas** `(1,3)`, `(26,3)`, `(1,23)`, `(26,23)`. Fidelidad arcade y simetría respecto del eje vertical del laberinto.
+- **Posiciones en las esquinas reales del laberinto** `(1,1)`, `(26,1)`, `(1,29)`, `(26,29)` (celdas transitables más externas, en el borde playable). El usuario puso explícitamente los power pellets "en cada esquina del mapa"; se cambió de las posiciones canónicas del arcade `(1,3)` / `(26,3)` / `(1,23)` / `(26,23)` a las esquinas reales tras feedback del usuario tras la primera implementación.
 - **Puntaje arcade canónico**: power pellet = 50, fantasmas comidos escalan `200 → 400 → 800 → 1600`. Refleja el comportamiento clásico y la recompensa por combo.
 - **Modo frightened independiente del modo scatter.** Cada uno vive en su spec; evita acoplar dos dominios (Spec 04 ya difería scatter).
 - **Duración fija `360` frames (~6 s) para nivel 1.** Sin curva decreciente por nivel (fuera de scope).
