@@ -53,10 +53,10 @@ const TUNNEL_ROW = 14;
 const PACMAN_START = { x: 13, y: 23 };
 // Orden contractual: indice 0 = Blinky (referencia fija de Inky).
 const GHOST_STARTS = [
-  { name: 'blanca', x: 13, y: 11, scatter: { x: 25, y: 0 } },  // Blinky  - esquina sup. derecha
-  { name: 'pinky',  x: 13, y: 14, scatter: { x: 2,  y: 0 } },  // Pinky   - esquina sup. izquierda
-  { name: 'inky',   x: 11, y: 14, scatter: { x: 27, y: 30 } }, // Inky    - esquina inf. derecha
-  { name: 'clyde',  x: 15, y: 14, scatter: { x: 0,  y: 30 } }, // Clyde   - esquina inf. izquierda
+  { name: 'blanca', x: 13, y: 11, scatter: { x: 25, y: 0 } },  // Blinky  - centro, arriba de la pen
+  { name: 'pinky',  x: 11, y: 11, scatter: { x: 2,  y: 0 } },  // Pinky   - izquierda del centro
+  { name: 'inky',   x: 15, y: 11, scatter: { x: 27, y: 30 } }, // Inky    - derecha del centro
+  { name: 'clyde',  x: 17, y: 11, scatter: { x: 0,  y: 30 } }, // Clyde   - extrema derecha del pasillo
 ];
 
 window.MAZE = MAZE;
