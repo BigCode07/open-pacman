@@ -10,14 +10,14 @@ const DIRS = {
 };
 const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
-const PACMAN_SPEED = 0.075; // 1/8 celda/frame -> alinea cada 8 frames (×0.6 spec 02)
+const PACMAN_SPEED = 1 / 13; // ~0.077 celda/frame; alinea cada 13 frames
 
 // Velocidades de fantasmas. Base: Pinky, Inky, Clyde siempre.
 // Blinky muta su speed en runtime segun dots restantes (Cruise Elroy).
-// Factor ×0.6 spec 02: reducir todo proporcionalmente para jugabilidad comoda.
-const GHOST_SPEED_BASE   = 0.06;
-const GHOST_SPEED_ELORY1 = 0.063; // Blinky cuando dots restantes < ELORY1_THRESHOLD
-const GHOST_SPEED_ELORY2 = 0.066;  // Blinky cuando dots restantes < ELORY2_THRESHOLD
+// Valores fraccionarios para alinearse con la grilla y evitar atravesar paredes.
+const GHOST_SPEED_BASE   = 1 / 16; // 0.0625 celda/frame; alinea cada 16 frames
+const GHOST_SPEED_ELORY1 = 1 / 15; // ~0.067 celda/frame; alinea cada 15 frames
+const GHOST_SPEED_ELORY2 = 1 / 14; // ~0.071 celda/frame; alinea cada 14 frames
 const ELORY1_THRESHOLD   = 30;
 const ELORY2_THRESHOLD   = 10;
 const CLYDE_RADIUS       = 8;     // distancia Manhattan
