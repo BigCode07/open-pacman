@@ -70,11 +70,19 @@ function drawDots( ctx, grid ) {
   ctx.fillStyle = DOT_COLOR;
   for ( let y = 0; y < grid.length; y++ ) {
     for ( let x = 0; x < grid[ 0 ].length; x++ ) {
-      if ( grid[ y ][ x ] !== 2 ) continue;
-      const { cx, cy } = cellCenter( x, y );
-      ctx.beginPath();
-      ctx.arc( cx, cy, 2.5, 0, Math.PI * 2 );
-      ctx.fill();
+      const v = grid[ y ][ x ];
+      if ( v === 2 ) {
+        const { cx, cy } = cellCenter( x, y );
+        ctx.beginPath();
+        ctx.arc( cx, cy, 2.5, 0, Math.PI * 2 );
+        ctx.fill();
+      } else if ( v === 4 ) {
+        // Power pellet: radio más grande que un dot común.
+        const { cx, cy } = cellCenter( x, y );
+        ctx.beginPath();
+        ctx.arc( cx, cy, 6, 0, Math.PI * 2 );
+        ctx.fill();
+      }
     }
   }
 }
@@ -98,7 +106,7 @@ function drawPacman( ctx, p, frame ) {
   ctx.fill();
 }
 
-function drawGhost( ctx, g, color ) {
+function drawGhost( ctx, g, color, game, frame ) {
   const { cx, cy } = cellCenter( g.x, g.y );
   const r = TILE / 2 - 1;
   const top = cy - r;
@@ -106,7 +114,21 @@ function drawGhost( ctx, g, color ) {
   const left = cx - r;
   const right = cx + r;
 
-  ctx.fillStyle = color;
+  // Estado 'eaten': solo ojos, sin cuerpo.
+  if ( g.state === 'eaten' ) {
+    drawGhostEyes( ctx, g, cx, cy );
+    return;
+  }
+
+  // Color según estado.
+  let body = color;
+  if ( g.state === 'frightened' ) {
+    const flashing = game.frightened.timer <= FRIGHTENED_FLASH;
+    if ( flashing && frame % 12 < 6 ) body = '#ffffff';
+    else body = '#2121ff';
+  }
+
+  ctx.fillStyle = body;
   ctx.beginPath();
   ctx.arc( cx, cy - 1, r, Math.PI, 0, false ); // cabeza
   ctx.lineTo( right, bottom );
@@ -118,7 +140,21 @@ function drawGhost( ctx, g, color ) {
   ctx.closePath();
   ctx.fill();
 
-  // ojos mirando segun direccion
+  if ( g.state === 'frightened' ) {
+    // Ojos genéricos fijos (puntos blancos).
+    ctx.fillStyle = '#fff';
+    for ( const off of [ -3.5, 3.5 ] ) {
+      ctx.beginPath();
+      ctx.arc( cx + off, cy - 1, 2, 0, Math.PI * 2 );
+      ctx.fill();
+    }
+  } else {
+    drawGhostEyes( ctx, g, cx, cy );
+  }
+}
+
+// Ojos mirando segun direccion. Reutilizado por 'chase', 'leaving_pen' y 'eaten'.
+function drawGhostEyes( ctx, g, cx, cy ) {
   const dir = DIRS[ g.dir ] || { x: 0, y: 0 };
   const ex = dir.x * 1.6;
   const ey = dir.y * 1.6;
@@ -159,7 +195,7 @@ function draw( ctx, game, frame ) {
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
-  game.ghosts.forEach( ( g, i ) => drawGhost( ctx, g, GHOST_COLORS[ i ] || '#ff0000' ) );
+  game.ghosts.forEach( ( g, i ) => drawGhost( ctx, g, GHOST_COLORS[ i ] || '#ff0000', game, frame ) );
   drawHUD( ctx, game, W );
 }
 
